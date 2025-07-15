@@ -25,13 +25,65 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: Download all models
-        run: python scripts/download_models.py
+      - name: Download all models (with retry)
+        shell: python
+        run: |
+          import os
+          import shutil
+          import time
+          from ultralytics import YOLO
+
+          print("--- Downloading YOLOv8 model ---")
+          model_dir = "models"
+          model_path = os.path.join(model_dir, "yolov8n.pt")
+          if not os.path.exists(model_dir):
+              os.makedirs(model_dir)
+          if not os.path.exists(model_path):
+              try:
+                  YOLO("yolov8n.pt")
+                  shutil.move("yolov8n.pt", model_path)
+                  print("✅ YOLOv8 model downloaded.")
+              except Exception as e:
+                  print(f"❌ Failed to download YOLOv8 model: {e}")
+                  exit(1)
+          else:
+              print("✅ YOLOv8 model already exists.")
+
+          print("\n--- Downloading HyperLPR models (with retry) ---")
+          try:
+              import hyperlpr3 as lpr3
+              success = False
+              retries = 5
+              for i in range(retries):
+                  try:
+                      lpr3.LicensePlateCatcher()
+                      print("✅ HyperLPR models downloaded successfully.")
+                      success = True
+                      break
+                  except PermissionError as e:
+                      print(f"⚠️ Attempt {i + 1}/{retries} failed with PermissionError: {e}")
+                      if i < retries - 1:
+                          print(f"   Retrying in 5 seconds...")
+                          time.sleep(5)
+              
+              if not success:
+                  print("❌ Failed to download HyperLPR models after multiple retries.")
+                  exit(1)
+          except Exception as e:
+              print(f"❌ An unexpected error occurred during HyperLPR initialization: {e}")
+              exit(1)
 
       - name: Build executable with PyInstaller
         run: |
           $hyperlpr_models_path = Join-Path $env:USERPROFILE ".hyperlpr3/models"
           echo "HyperLPR models path: $hyperlpr_models_path"
+          
+          # Verify that the directory exists before packaging
+          if (-not (Test-Path $hyperlpr_models_path)) {
+            echo "::error::Build cannot continue because HyperLPR models directory not found at $hyperlpr_models_path"
+            exit 1
+          }
+
           pyinstaller --name plate_mosaic_ocr --onefile --clean `
           --add-data "models;models" `
           --add-data "$hyperlpr_models_path;hyperlpr3/models" `
