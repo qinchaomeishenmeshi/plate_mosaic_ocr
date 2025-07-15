@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+tqdm
+opencv-python
+ultralytics
+paddleocr
+paddlepaddle
+
+ultralytics
+opencv-python
+numpy
+tqdm
+hyperlpr3
+pyinstaller

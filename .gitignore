@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+
+# IDEs
+.idea/
+.vscode/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Output folder
+/output/
+/plate_mosaic_ocr.exe
+
+# Model files not in the models directory
+yolov8n.pt
+
+# macOS
+.DS_Store 
