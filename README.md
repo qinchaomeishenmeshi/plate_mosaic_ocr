@@ -1,7 +1,5 @@
 # 视频车牌智能打码工具
 
-[![Build Status](https://github.com/actions/workflows/build.yml/badge.svg)](https://github.com/actions/workflows/build.yml)
-
 这是一个功能强大的视频处理工具，旨在自动检测视频中的车辆车牌并应用马赛克效果。它结合了 `YOLOv8` 车辆检测和 `HyperLPR` 车牌识别技术，提供了多种检测模式以适应不同场景的需求。
 
 为了方便使用，本项目支持**命令行批量处理**和**交互式配置**两种模式，并且可以通过 GitHub Actions 实现自动化构建，直接生成可在 Windows 上运行的 `.exe` 可执行文件。
@@ -24,8 +22,8 @@
 
 1.  **克隆仓库**
     ```bash
-    git clone https://github.com/<你的用户名>/<你的仓库名>.git
-    cd <你的仓库名>
+    git clone https://github.com/qinchaomeishenmeshi/plate_mosaic_ocr.git
+    cd plate_mosaic_ocr
     ```
 
 2.  **安装依赖**
