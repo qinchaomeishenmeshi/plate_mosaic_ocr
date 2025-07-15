@@ -25,17 +25,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: Download YOLO model by running the script
-        run: |
-          # 运行脚本的导入部分会触发模型下载
-          python -c "import app"
-        shell: bash
+      - name: Download all models
+        run: python scripts/download_models.py
 
       - name: Build executable with PyInstaller
         run: |
+          $hyperlpr_models_path = Join-Path $env:USERPROFILE ".hyperlpr3/models"
+          echo "HyperLPR models path: $hyperlpr_models_path"
           pyinstaller --name plate_mosaic_ocr --onefile --clean `
           --add-data "models;models" `
+          --add-data "$hyperlpr_models_path;hyperlpr3/models" `
           app.py
+        shell: powershell
         
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

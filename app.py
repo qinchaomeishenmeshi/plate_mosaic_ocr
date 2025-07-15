@@ -8,17 +8,7 @@ import numpy as np
 import argparse
 import sys
 
-# 导入HyperLPR
-try:
-    import hyperlpr3 as lpr3
-    catcher = lpr3.LicensePlateCatcher()
-    HYPERLPR_AVAILABLE = True
-    print("✅ HyperLPR 导入成功！")
-except ImportError:
-    catcher = None
-    HYPERLPR_AVAILABLE = False
-    print("⚠️ HyperLPR 未安装或导入失败，将使用基于车辆区域的检测方法")
-    print("   请确保已正确安装: pip install hyperlpr3")
+# 移除了顶层的HyperLPR导入和初始化
 
 # --- 全局配置与模型加载 ---
 MODEL_PATH = "models/yolov8n.pt"  # 使用通用YOLOv8模型检测汽车
@@ -347,14 +337,14 @@ def init_worker():
     else:
         print(f"❌ 工作进程 {os.getpid()} YOLOv8模型加载失败")
 
-    # 为每个工作进程初始化HyperLPR
+    # 为每个工作进程初始化HyperLPR，增加对PermissionError的处理
     try:
         import hyperlpr3 as lpr3
         worker_catcher = lpr3.LicensePlateCatcher()
         print(f"✅ 工作进程 {os.getpid()} HyperLPR加载成功")
-    except ImportError:
+    except (ImportError, PermissionError) as e:
         worker_catcher = None
-        print(f"⚠️ 工作进程 {os.getpid()} HyperLPR不可用")
+        print(f"⚠️ 工作进程 {os.getpid()} HyperLPR不可用或初始化失败: {e}")
 
 
 def process_video_multiprocess(args):
@@ -574,6 +564,21 @@ def main():
         print("2. 有足够的磁盘空间存储模型文件")
         print("3. 已安装ultralytics包：pip install ultralytics")
         sys.exit(1)
+
+    # 在开始处理前，最后检查一下HyperLPR是否真的可用
+    try:
+        import hyperlpr3
+        hyperlpr_check_ok = True
+    except (ImportError, PermissionError):
+        hyperlpr_check_ok = False
+
+    if args.mode == 'hyperlpr' and not hyperlpr_check_ok:
+        print("\n⚠️ 警告: 您选择了 'hyperlpr' 模式，但HyperLPR库似乎无法使用。")
+        print("   处理可能会失败或跳过所有帧。建议选择其他模式或检查安装。")
+        confirm = input("   是否仍要继续? (y/N): ")
+        if confirm.lower() != 'y':
+            print("🔴 操作已取消。")
+            sys.exit(0)
 
     # 开始批量处理
     batch_process(
