@@ -678,4 +678,13 @@ def main():
 
 
 if __name__ == "__main__":
+    # 在多进程前，主进程先初始化一次，确保模型文件已下载并解压，避免多进程冲突
+    if HYPERLPR_AVAILABLE and catcher is not None:
+        try:
+            import numpy as np
+            dummy_img = np.zeros((100, 200, 3), dtype=np.uint8)
+            catcher(dummy_img)
+            print("✅ HyperLPR模型文件已准备好")
+        except Exception as e:
+            print(f"❌ HyperLPR预初始化失败: {e}")
     main()
