@@ -18,18 +18,18 @@ try:
     catcher = lpr3.LicensePlateCatcher()
     HYPERLPR_AVAILABLE = True
     print("✅ HyperLPR 导入成功！")
-except (ImportError, PermissionError) as e:
+except (ImportError, PermissionError, Exception) as e:  # 扩展捕获异常
     catcher = None
     HYPERLPR_AVAILABLE = False
     print(f"⚠️ HyperLPR 未安装或初始化失败: {e}")
-    print("   请确保已正确安装: pip install hyperlpr3")
+    print("   请确保已正确安装: pip install hyperlpr3 并运行以下载模型")
 
 # --- 全局配置与模型加载 ---
 MODEL_PATH = "models/yolov8n.pt"  # 使用通用YOLOv8模型检测汽车
 
 
 def ensure_model_exists():
-    """确保模型文件存在，如果不存在则自动下载"""
+    """确保模型文件存在，如果不存在则提示用户下载"""
     if not os.path.exists("models"):
         os.makedirs("models")
 
@@ -59,10 +59,12 @@ try:
     if model:
         print("✅ 模型加载成功！")
     else:
-        print("❌ 模型加载失败")
+        print("❌ 模型加载失败，请先下载模型")
+        sys.exit(1)  # 退出程序
 except Exception as e:
     print(f"❌ 模型加载失败: {e}")
     model = None
+    sys.exit(1)
 
 DEFAULT_MOSAIC_SCALE = 0.05  # 车牌打码更细致
 DEFAULT_PADDING = 10
@@ -682,9 +684,17 @@ if __name__ == "__main__":
     if HYPERLPR_AVAILABLE and catcher is not None:
         try:
             import numpy as np
+
             dummy_img = np.zeros((100, 200, 3), dtype=np.uint8)
             catcher(dummy_img)
             print("✅ HyperLPR模型文件已准备好")
         except Exception as e:
             print(f"❌ HyperLPR预初始化失败: {e}")
     main()
+
+# 添加HyperLPR检查
+if not HYPERLPR_AVAILABLE:
+    print("❌ HyperLPR模型不可用，请安装hyperlpr3并确保模型下载完成")
+    print("安装命令: pip install hyperlpr3")
+    print("然后运行import hyperlpr3 as lpr3; lpr3.LicensePlateCatcher() 以初始化模型")
+    sys.exit(1)
