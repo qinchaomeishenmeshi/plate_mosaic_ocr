@@ -25,7 +25,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           
-      - name: Download all models (with retry)
+      - name: Download all models (with enhanced retry and logging)
         shell: python
         run: |
           import os
@@ -49,22 +49,23 @@ jobs:
           else:
               print("✅ YOLOv8 model already exists.")
 
-          print("\n--- Downloading HyperLPR models (with retry) ---")
+          print("\n--- Downloading HyperLPR models (with enhanced retry) ---")
           try:
               import hyperlpr3 as lpr3
               success = False
-              retries = 5
+              retries = 10  # 增加重试次数
               for i in range(retries):
                   try:
-                      lpr3.LicensePlateCatcher()
+                      catcher = lpr3.LicensePlateCatcher()  # 尝试初始化
                       print("✅ HyperLPR models downloaded successfully.")
+                      print(f"Model directory: {os.path.dirname(catcher._model_path)}")  # 添加日志
                       success = True
                       break
-                  except PermissionError as e:
-                      print(f"⚠️ Attempt {i + 1}/{retries} failed with PermissionError: {e}")
+                  except Exception as e:  # 捕获所有异常
+                      print(f"⚠️ Attempt {i + 1}/{retries} failed: {e}")
                       if i < retries - 1:
-                          print(f"   Retrying in 5 seconds...")
-                          time.sleep(5)
+                          print(f"   Retrying in 10 seconds...")  # 增加等待时间
+                          time.sleep(10)
               
               if not success:
                   print("❌ Failed to download HyperLPR models after multiple retries.")
@@ -94,4 +95,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: plate-mosaic-ocr-windows-exe
-          path: dist/plate_mosaic_ocr.exe 
+          path: dist/plate_mosaic_ocr.exe
